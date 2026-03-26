@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuestionario de Clima Laboral (Litwin y Stringer)</title>
+    <style>
+        :root {
+            --primary-red: #c62828;
+            --dark-red: #8e0000;
+            --gray-600: #757575;
+            --gray-100: #f5f5f5;
+            --gray-900: #212121;
+            --sticky-offset: 0px;
+            --error-red: #d32f2f;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif; 
+            background-color: var(--gray-100);
+            color: var(--gray-900);
+            line-height: 1.6;
+            padding: 0;
+        }
+
+        .paper-container {
+            max-width: 950px;
+            margin: 0 auto 40px;
+            background: white;
+            padding: 3rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border-top: 10px solid var(--primary-red);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            color: var(--primary-red);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .demographics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+            background: #fafafa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 5px solid var(--gray-600);
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .demographics label {
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: var(--gray-600);
+            text-transform: uppercase;
+        }
+
+        .demographics input {
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        .demographics input:focus { border-color: var(--primary-red); outline: none; }
+
+        .full-width-field { grid-column: span 3; }
+
+        /* Barra de Progreso Sticky con Efecto Liquid Glass */
+        .progress-sticky {
+            position: sticky;
+            top: 0;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 1000;
+            padding: 8px 1.5rem;
+            border-bottom: 1px solid rgba(198, 40, 40, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.6s ease, visibility 0.6s;
+            border-radius: 0 0 15px 15px;
+        }
+        .progress-sticky.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .progress-bar-bg {
+            flex-grow: 1;
+            height: 10px;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 30px;
+            overflow: hidden;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ff5252, var(--primary-red), #ff5252);
+            background-size: 200% 100%;
+            animation: moveGradient 3s linear infinite;
+            border-radius: 30px;
+            box-shadow: 0 0 20px rgba(198, 40, 40, 0.5);
+            position: relative;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @keyframes moveGradient {
+            0% { background-position: 100% 0%; }
+            100% { background-position: -100% 0%; }
+        }
+        /* Efecto de brillo líquido */
+        .progress-bar-fill::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(
+                rgba(255,255,255,0.3) 0%,
+                rgba(255,255,255,0) 50%,
+                rgba(0,0,0,0.05) 100%
+            );
+        }
+        .progress-text {
+            font-weight: 900;
+            color: var(--primary-red);
+            font-size: 0.85rem;
+            min-width: 130px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 2rem;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background: linear-gradient(180deg, var(--primary-red), var(--dark-red));
+            color: white;
+            padding: 18px 5px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: sticky;
+            top: var(--sticky-offset);
+            z-index: 10;
+            transition: top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border: none;
+        }
+
+        td {
+            border: 1px solid #ddd;
+            padding: 12px 10px;
+            text-align: center;
+        }
+
+        tr:nth-child(even) { background-color: #fcfcfc; }
+        tr:hover { background-color: #fff5f5; }
+        tr.answered { background-color: #f1f8e9 !important; }
+        tr.answered td.num { color: #2e7d32; }
+
+        td.question { text-align: left; font-weight: 500; font-size: 0.95rem; }
+        td.num { font-weight: 700; color: var(--gray-600); width: 45px; }
+
+        input[type="radio"] {
+            transform: scale(1.6);
+            cursor: pointer;
+            accent-color: var(--primary-red);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 3rem;
+            font-weight: bold;
+        }
+
+        .submit-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn-submit {
+            background-color: var(--primary-red);
+            color: white;
+            padding: 1.2rem 4rem;
+            border: none;
+            font-size: 1.2rem;
+            font-weight: 900;
+            cursor: pointer;
+            border-radius: 50px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(198, 40, 40, 0.3);
+        }
+
+        .btn-submit:hover:not(:disabled) { 
+            background-color: var(--dark-red); 
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(198, 40, 40, 0.4);
+        }
+        .demographics input.error {
+            border: 2px solid var(--error-red);
+            background-color: #ffebee;
+        }
+
+        .demographics input.success {
+            border: 2px solid #2e7d32;
+            background-color: #e8f5e9;
+        }
+        
+        .error-banner {
+            display: none;
+            background-color: var(--error-red);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            font-weight: 700;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(211, 47, 47, 0.2);
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        #success-screen {
+            display: none;
+            text-align: center;
+            padding: 5rem 2rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            max-width: 900px;
+            margin: 40px auto;
+            border-top: 15px solid var(--primary-red);
+        }
+        #success-screen h2 { color: var(--primary-red); font-size: 2.5rem; font-weight: 900; margin-bottom: 1rem; }
+        
+        .classification-malo { color: #d32f2f; font-weight: bold; }
+        .classification-regular { color: #f9a825; font-weight: bold; }
+        .classification-bueno { color: #2e7d32; font-weight: bold; }
+        .classification-excelente { color: #1565c0; font-weight: bold; }
+
+        @media (max-width: 768px) {
+            .paper-container { padding: 1.5rem; }
+            .demographics { grid-template-columns: 1fr; }
+            .progress-sticky { padding: 10px 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="progress-sticky">
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill"></div></div>
+    <div class="progress-text" id="progress-text">Progreso: 0 / 53</div>
+</div>
+
+<div class="paper-container" id="main-content">
+
+    <header>
+        <h1>Cuestionario de Clima Laboral de Litwin y Stringer (1968) (Revisado, 2001)</h1>
+    </header>
+
+    <div id="demo-error-banner" class="error-banner"> ⚠️ Por favor, completa los campos obligatorios resaltados en rojo. </div>
+
+    <div class="demographics">
+        <div class="field"><label>Edad:</label><input type="text" id="demo-edad" placeholder="Obligatorio"></div>
+        <div class="field"><label>Sexo:</label><input type="text" id="demo-sexo" placeholder="Obligatorio"></div>
+        <div class="field"><label>Antigüedad:</label><input type="text" id="demo-antiguedad" placeholder="Obligatorio"></div>
+        <div class="full-width-field"><label>Área o Depto:</label><input type="text" id="demo-depto" placeholder="Obligatorio"></div>
+        <div class="full-width-field"><label>Planta:</label><input type="text" id="demo-planta" placeholder="Obligatorio"></div>
+    </div>
+
+    <div class="instructions">
+        <p>En el siguiente cuestionario indique para cada una de las siguientes afirmaciones su grado de acuerdo o desacuerdo en relación a su percepción sobre diversos aspectos de la institución, marcando con una X en la respuesta que considere más acertada. Asegúrese de responder a todas las preguntas. No hay respuestas correctas o incorrectas, ni preguntas con trampa.</p>
+        <p><i>(Recuerde escoger la casilla que corresponde a su respuesta en las columnas de derecha)</i></p>
+    </div>
+
+    <table id="questionnaire-table">
+        <thead>
+            <tr>
+                <th rowspan="1">N.</th>
+                <th rowspan="1">Ítem</th>
+                <th class="vertical-header"><div>Muy en Desacuerdo</div></th>
+                <th class="vertical-header"><div>En Desacuerdo</div></th>
+                <th class="vertical-header"><div>De Acuerdo</div></th>
+                <th class="vertical-header"><div>Muy de Acuerdo</div></th>
+            </tr>
+        </thead>
+        <tbody id="questions-body">
+            <!-- Questions will be injected here -->
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p>Muchas Gracias por Participar.</p>
+        <p>Recuerde revisar si ha contestado a todas las preguntas.</p>
+    </div>
+
+    <div class="submit-section">
+        <div id="missing-alert" class="error-text" style="display:none;">⚠️ Faltan preguntas por responder.</div>
+        <button id="btn-submit" class="btn-submit" onclick="enviar()">Enviar Evaluación</button>
+    </div>
+</div>
+
+<div id="success-screen">
+    <div style="font-size: 4rem; color: var(--success); margin-bottom: 1.5rem;">✓</div>
+    <h2>¡Evaluación Enviada Exitosamente!</h2>
+    <p>Sus respuestas han sido registradas en la base de datos.<br>Gracias por su valiosa participación.</p>
+    <div id="summary-report" style="margin-top:2.5rem; text-align: left;"></div>
+</div>
+
+<script>
+    const questions = [
+        { id: 1, dim: "1. Estructura", pol: 1, text: "En esta organización las tareas están claramente definidas" },
+        { id: 2, dim: "1. Estructura", pol: 1, text: "En esta organización las tareas están lógicamente estructuradas" },
+        { id: 3, dim: "1. Estructura", pol: 1, text: "En esta organización se tiene claro quién manda y toma las decisiones" },
+        { id: 4, dim: "1. Estructura", pol: 1, text: "Conozco claramente las políticas de esta organización" },
+        { id: 5, dim: "1. Estructura", pol: 1, text: "Conozco claramente la estructura organizativa de esta organización" },
+        { id: 6, dim: "1. Estructura", pol: 1, text: "En esta organización no existen muchos papeleos para hacer las cosas" },
+        { id: 7, dim: "1. Estructura", pol: -1, text: "El exceso de reglas, detalles administrativos y trámites impiden que las nuevas ideas sean evaluadas (tomadas en cuenta)" },
+        { id: 8, dim: "1. Estructura", pol: -1, text: "Aquí la productividad se ve afectada por la falta de organización y planificación" },
+        { id: 9, dim: "1. Estructura", pol: -1, text: "En esta organización a veces no se tiene claro a quien reportar" },
+        { id: 10, dim: "1. Estructura", pol: 1, text: "Nuestra jefatura muestra interés porque las normas, métodos y procedimientos estén claros y se cumplan" },
+        { id: 11, dim: "2. Responsabilidad", pol: -1, text: "No nos confiamos mucho en juicios individuales en esta organización, casi todo se verifica dos veces" },
+        { id: 12, dim: "2. Responsabilidad", pol: 1, text: "Nuestra jefatura le gusta que haga bien mi trabajo sin estar verificándolo con ellos" },
+        { id: 13, dim: "2. Responsabilidad", pol: 1, text: "Mis superiores sólo trazan planes generales de lo que debo hacer, del resto yo soy responsable por el trabajo realizado" },
+        { id: 14, dim: "2. Responsabilidad", pol: 1, text: "En esta organización salgo adelante cuando tomo la iniciativa y trato de hacer las cosas por mí mismo" },
+        { id: 15, dim: "2. Responsabilidad", pol: 1, text: "Nuestra filosofía enfatiza que las personas deben resolver los problemas por sí mismas" },
+        { id: 16, dim: "2. Responsabilidad", pol: -1, text: "En esta organización cuando alguien comete un error siempre hay una gran cantidad de excusas" },
+        { id: 17, dim: "2. Responsabilidad", pol: -1, text: "En esta organización uno de los problemas es que los individuos no toman responsabilidades" },
+        { id: 18, dim: "3. Recompensa", pol: 1, text: "En esta organización existe un buen sistema de promoción que ayuda a que el mejor ascienda" },
+        { id: 19, dim: "3. Recompensa", pol: 1, text: "Las recompensas e incentivos que se reciben en esta organización son mayores que las amenazas y críticas" },
+        { id: 20, dim: "3. Recompensa", pol: 1, text: "Aquí las personas son recompensadas según su desempeño en el trabajo" },
+        { id: 21, dim: "3. Recompensa", pol: -1, text: "En esta organización hay muchísima crítica" },
+        { id: 22, dim: "3. Recompensa", pol: -1, text: "En esta organización no existe suficiente recompensa y reconocimiento por hacer un buen trabajo" },
+        { id: 23, dim: "3. Recompensa", pol: 1, text: "Cuando cometo un error me sancionan" },
+        { id: 24, dim: "4. Riesgo", pol: -1, text: "La filosofía de nuestra jefatura es que a largo plazo progresaremos más si hacemos las cosas lentas pero certeramente" },
+        { id: 25, dim: "4. Riesgo", pol: 1, text: "Esta organización ha tomado riesgos en los momentos oportunos" },
+        { id: 26, dim: "4. Riesgo", pol: 1, text: "En esta organización tenemos que tomar riesgos grandes ocasionalmente para estar delante de la competencia" },
+        { id: 27, dim: "4. Riesgo", pol: -1, text: "La toma de decisiones en esta organización se hace con demasiada precaución para lograr la máxima efectividad" },
+        { id: 28, dim: "4. Riesgo", pol: 1, text: "Aquí la jefatura se arriesga por una buena idea" },
+        { id: 29, dim: "5. Calor", pol: 1, text: "Entre la gente de esta organización prevalece una atmósfera amistosa" },
+        { id: 30, dim: "5. Calor", pol: 1, text: "Esta organización se caracteriza por tener un clima de trabajo agradable y sin tensiones" },
+        { id: 31, dim: "5. Calor", pol: -1, text: "Es bastante difícil llegar a conocer a las personas en esta organización" },
+        { id: 32, dim: "5. Calor", pol: -1, text: "Las personas en esta organización tienden a ser frías y reservadas entre sí" },
+        { id: 33, dim: "5. Calor", pol: 1, text: "Las relaciones Jefatura – Trabajador tienden a ser agradables" },
+        { id: 34, dim: "6. Estándares", pol: 1, text: "En esta organización se exige un rendimiento bastante alto" },
+        { id: 35, dim: "6. Estándares", pol: 1, text: "La Jefatura piensa que todo trabajo se puede mejorar" },
+        { id: 36, dim: "6. Estándares", pol: 1, text: "En esta organización siempre presionan para mejorar continuamente mi rendimiento personal y grupal" },
+        { id: 37, dim: "6. Estándares", pol: 1, text: "La Jefatura piensa que si las personas están contentas la productividad marchará bien" },
+        { id: 38, dim: "6. Estándares", pol: -1, text: "Aquí es más importante llevarse bien con los demás que tener un buen desempeño" },
+        { id: 39, dim: "6. Estándares", pol: 1, text: "Me siento orgulloso de mi desempeño" },
+        { id: 40, dim: "7. Apoyo", pol: -1, text: "Si me equivoco, las cosas van mal para mis superiores" },
+        { id: 41, dim: "7. Apoyo", pol: 1, text: "En esta organización la gerencia habla acerca de mis aspiraciones dentro de la organización" },
+        { id: 42, dim: "7. Apoyo", pol: -1, text: "Las personas dentro de esta organización no confían verdaderamente una en la otra" },
+        { id: 43, dim: "7. Apoyo", pol: 1, text: "Mi jefe y mis compañeros me ayudan cuando tengo una labor difícil" },
+        { id: 44, dim: "7. Apoyo", pol: 1, text: "La filosofía de nuestra jefatura enfatiza el factor humano (cómo se sienten las personas, etc)" },
+        { id: 45, dim: "8. Conflicto", pol: -1, text: "En esta organización se causa buena impresión si uno se mantiene callado para evitar desacuerdos" },
+        { id: 46, dim: "8. Conflicto", pol: 1, text: "La actitud de nuestra jefatura es que el conflicto entre unidades y departamentos puede ser bastante saludable" },
+        { id: 47, dim: "8. Conflicto", pol: 1, text: "La Jefatura siempre busca estimular las discusiones abiertas entre individuos" },
+        { id: 48, dim: "8. Conflicto", pol: 1, text: "Siempre puedo decir lo que pienso aunque no esté de acuerdo con mis jefes" },
+        { id: 49, dim: "8. Conflicto", pol: -1, text: "Lo más importante en la organización es tomar decisiones de la manera más fácil y rápida posible" },
+        { id: 50, dim: "9. Identidad", pol: 1, text: "La gente se siente orgullosa de pertenecer a esta organización" },
+        { id: 51, dim: "9. Identidad", pol: 1, text: "Siento que soy miembro de un equipo que funciona bien" },
+        { id: 52, dim: "9. Identidad", pol: -1, text: "Siento que no hay mucha lealtad por parte del personal hacia la compañía" },
+        { id: 53, dim: "9. Identidad", pol: -1, text: "En esta organización cada cual se preocupa de sus propios intereses" }
+    ];
+
+    const container = document.getElementById('questions-body');
+
+    // Validación en tiempo real para datos demográficos
+    ['demo-edad', 'demo-sexo', 'demo-antiguedad', 'demo-depto', 'demo-planta'].forEach(id => {
+        const input = document.getElementById(id);
+        input.oninput = () => {
+            if (input.value.trim().length > 0) {
+                input.classList.remove('error');
+                input.classList.add('success');
+            } else {
+                input.classList.remove('success');
+            }
+            // Ocultar banner si ya hay algo en todos
+            const anyEmpty = ['demo-edad', 'demo-sexo', 'demo-antiguedad', 'demo-depto', 'demo-planta']
+                .some(i => !document.getElementById(i).value.trim());
+            if (!anyEmpty) document.getElementById('demo-error-banner').style.display = 'none';
+        };
+    });
+
+    questions.forEach(q => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="num">${q.id}</td>
+            <td class="question">${q.text}</td>
+            <td class="option"><input type="radio" name="q${q.id}" value="1"></td>
+            <td class="option"><input type="radio" name="q${q.id}" value="2"></td>
+            <td class="option"><input type="radio" name="q${q.id}" value="3"></td>
+            <td class="option"><input type="radio" name="q${q.id}" value="4"></td>
+        `;
+        // Permitir clic en la celda para marcar radio
+        tr.querySelectorAll('.option').forEach(cell => {
+            cell.onclick = () => {
+                const radio = cell.querySelector('input');
+                radio.checked = true;
+                tr.classList.add('answered');
+                actualizarProgreso();
+            };
+        });
+        container.appendChild(tr);
+    });
+
+    function actualizarProgreso() {
+        const answered = document.querySelectorAll('input[type="radio"]:checked').length;
+        const total = questions.length;
+        
+        const sticky = document.querySelector('.progress-sticky');
+        if (answered > 0) {
+            sticky.classList.add('visible');
+            document.documentElement.style.setProperty('--sticky-offset', '48px');
+        } else {
+            sticky.classList.remove('visible');
+            document.documentElement.style.setProperty('--sticky-offset', '0px');
+        }
+
+        document.getElementById('progress-fill').style.width = `${(answered / total) * 100}%`;
+        document.getElementById('progress-text').textContent = `Progreso: ${answered} / ${total}`;
+        
+        // Ocultar alertas si se cumple el criterio
+        if (answered === total) document.getElementById('missing-alert').style.display = 'none';
+        
+        // Limpiar errores visuales al escribir/marcar
+        document.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
+        // No quitar success aquí, dejar que se mantenga el estímulo positivo
+        document.getElementById('demo-error-banner').style.display = 'none';
+    }
+
+    async function enviar() {
+        const btn = document.getElementById('btn-submit');
+        const checkedRadios = document.querySelectorAll('input[type="radio"]:checked');
+        
+        // Validación de datos demográficos mejorada
+        const demoFields = ['demo-edad', 'demo-sexo', 'demo-antiguedad', 'demo-depto', 'demo-planta'];
+        let hasDemoError = false;
+
+        demoFields.forEach(id => {
+            const input = document.getElementById(id);
+            if (!input.value.trim()) {
+                input.classList.add('error');
+                hasDemoError = true;
+            }
+        });
+
+        if (hasDemoError) {
+            document.getElementById('demo-error-banner').style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+        }
+
+        if (checkedRadios.length < questions.length) {
+            const missingBanner = document.getElementById('missing-alert');
+            missingBanner.style.display = 'block';
+            missingBanner.innerHTML = `⚠️ Faltan ${questions.length - checkedRadios.length} preguntas por responder. Por favor revisa el formulario.`;
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = "Guardando...";
+
+        const results = [];
+        const dimensionSums = {};
+        const dimensionCounts = {};
+
+        questions.forEach(q => {
+            const val = parseInt(document.querySelector(`input[name="q${q.id}"]:checked`).value);
+            let score = q.pol === 1 ? val : (5 - val);
+
+            if (!dimensionSums[q.dim]) {
+                dimensionSums[q.dim] = 0;
+                dimensionCounts[q.dim] = 0;
+            }
+            dimensionSums[q.dim] += score;
+            dimensionCounts[q.dim]++;
+
+            results.push({
+                item: q.id,
+                pregunta: q.text,
+                dimension: q.dim,
+                puntaje: score
+            });
+        });
+
+        // Cálculos Finales
+        const averages = {};
+        let globalSum = 0;
+        Object.keys(dimensionSums).forEach(dim => {
+            const avg = dimensionSums[dim] / dimensionCounts[dim];
+            averages[dim] = avg;
+            globalSum += avg;
+        });
+        const globalClimate = globalSum / 9;
+
+        const interpretar = (v) => {
+            if (v < 1.45) return "Malo";
+            if (v < 2.45) return "Regular";
+            if (v < 3.45) return "Bueno";
+            return "Excelente";
+        };
+
+        const payload = {
+            fecha: new Date().toLocaleString(),
+            metadata: {
+                edad: document.getElementById('demo-edad').value,
+                sexo: document.getElementById('demo-sexo').value,
+                antiguedad: document.getElementById('demo-antiguedad').value,
+                depto: document.getElementById('demo-depto').value,
+                planta: document.getElementById('demo-planta').value
+            },
+            respuestas: results.map(r => ({
+                Tipo: "Litwin-Stringer",
+                Dimension: r.dimension,
+                Letra: r.item.toString(),
+                Pregunta: r.pregunta,
+                Puntaje: r.puntaje
+            }))
+        };
+
+        try {
+            // URL actualizada proporcionada por el usuario
+            const scriptURL = "https://script.google.com/macros/s/AKfycbzELq06Vb3d0rEtFUXXLib1cVJjr7XsvFgtbVYtsxkRe3vvaPyvhRxaQ1cIcqq-iTS9Sw/exec";
+            
+            // Usamos mode: 'no-cors' para evitar problemas de CORS ejecutando desde archivos locales
+            await fetch(scriptURL, {
+                method: "POST",
+                mode: "no-cors", 
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(payload)
+            });
+
+            // Con no-cors no podemos leer la respuesta, pero si no hay error de red, asumimos éxito
+            document.getElementById('main-content').style.display = 'none';
+            document.getElementById('success-screen').style.display = 'block';
+            
+            let summaryHTML = `<h3 style="margin-bottom:1rem; color:var(--primary-red); text-transform:uppercase;">Resumen de Resultados:</h3>
+                <table style="width:100%; border-collapse:collapse; background: #fff; border: 2px solid var(--primary-red);">
+                    <tr style="background:var(--primary-red); color: white;">
+                        <th style="padding:12px; border: 1px solid #ddd; text-align:left;">Dimensión</th>
+                        <th style="padding:12px; border: 1px solid #ddd; text-align:center;">Puntaje</th>
+                        <th style="padding:12px; border: 1px solid #ddd; text-align:center;">Clasificación</th>
+                    </tr>`;
+            
+            Object.keys(averages).forEach(dim => {
+                const interp = interpretar(averages[dim]);
+                const classLabel = interp.toLowerCase();
+                summaryHTML += `<tr>
+                    <td style="padding:12px; border: 1px solid #ddd;">${dim}</td>
+                    <td style="padding:12px; border: 1px solid #ddd; text-align:center; font-weight:bold;">${averages[dim].toFixed(2)}</td>
+                    <td style="padding:12px; border: 1px solid #ddd; text-align:center;" class="classification-${classLabel}">${interp}</td>
+                </tr>`;
+            });
+
+            summaryHTML += `<tr style="background:#e6effb; font-weight:bold;">
+                <td style="padding:10px; border: 1px solid #ddd;">CLIMA GLOBAL</td>
+                <td style="padding:10px; border: 1px solid #ddd; text-align:center;">${globalClimate.toFixed(2)}</td>
+                <td style="padding:10px; border: 1px solid #ddd; text-align:center;">${interpretar(globalClimate)}</td>
+            </tr></table>`;
+            
+            document.getElementById('summary-report').innerHTML = summaryHTML;
+            window.scrollTo(0,0);
+
+        } catch (error) {
+            console.error(error);
+            alert("Error al enviar: " + error.message + ". Intenta verificar tu conexión o la configuración del script.");
+            btn.disabled = false;
+            btn.textContent = "Intentar de nuevo";
+        }
+    }
+</script>
+
+</body>
+</html>
